@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfraFlow - Protótipo Alta Fidelidade</title>
+    <style>
+        /* Variáveis de Cores Corporativas */
+        :root {
+            --primary-blue: #004a8f;
+            --secondary-blue: #007bff;
+            --bg-color: #f4f7f6;
+            --white: #ffffff;
+            --text-dark: #333333;
+            --text-light: #666666;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            background-color: #e0e5ec;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Moldura do Celular */
+        #mobile-frame {
+            width: 375px;
+            height: 812px;
+            background-color: var(--white);
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+            border: 8px solid #333;
+        }
+
+        /* Header Padrão */
+        header {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 15px;
+            color: var(--white);
+            text-decoration: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        .logout-btn {
+            position: absolute;
+            right: 15px;
+            color: var(--white);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* Telas */
+        .screen {
+            display: none;
+            height: calc(100% - 64px); 
+            overflow-y: auto;
+            background-color: var(--bg-color);
+            padding: 20px;
+            padding-bottom: 80px; /* Espaço para o menu inferior */
+        }
+
+        .screen.active { display: block; }
+
+        /* Formulários e Botões */
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: var(--text-dark); font-weight: 600; font-size: 0.9rem;}
+        .input-group input, .input-group select {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem;
+        }
+
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 10px;
+            transition: 0.3s;
+        }
+        .btn-primary { background-color: var(--secondary-blue); color: var(--white); }
+        .btn-primary:hover { background-color: var(--primary-blue); }
+        .btn-outline { background-color: transparent; border: 2px solid var(--secondary-blue); color: var(--secondary-blue); }
+        .btn-dark { background-color: #343a40; color: white; }
+        
+        /* Logo e Início */
+        .logo-container { text-align: center; margin: 30px 0; }
+        .logo-container img { max-width: 160px; margin-bottom: 15px; }
+        .logo-container h1 { color: var(--primary-blue); font-size: 2rem; display: none; }
+        .logo-container p { color: var(--text-light); }
+
+        /* Cards */
+        .card {
+            background: var(--white); padding: 15px; border-radius: 10px;
+            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        }
+        .card:hover { border-left: 4px solid var(--secondary-blue); }
+        .card-title { font-weight: bold; color: var(--primary-blue); font-size: 1.1rem; }
+        .card-subtitle { font-size: 0.85rem; color: var(--text-light); margin-top: 5px; }
+
+        /* Badges */
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .badge.disponivel { background-color: var(--success); }
+        .badge.pendente { background-color: var(--warning); color: #333; }
+        .badge.manutencao { background-color: var(--danger); }
+        .badge.andamento { background-color: #17a2b8; }
+
+        /* Alerta */
+        .alert-box {
+            background-color: #fff3cd; color: #856404; padding: 15px;
+            border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--warning);
+            font-size: 0.9rem; display: none;
+        }
+
+        /* Menu Inferior */
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--white);
+            display: flex; justify-content: space-around; padding: 15px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .bottom-nav span { color: var(--text-light); font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: center; }
+        .bottom-nav span.active-tab { color: var(--primary-blue); }
+        .bottom-nav span i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
+
+        /* Divisores de Bloco */
+        .bloco-header {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--text-light);
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div id="mobile-frame">
+    <header>
+        <span class="back-btn" id="btn-voltar" onclick="goBack()">◄ Voltar</span>
+        <span id="header-title">InfraFlow</span>
+        <span class="logout-btn" id="btn-logout" onclick="logout()">Sair</span>
+    </header>
+
+    <!-- TEL001: Login -->
+    <div id="tel001" class="screen active">
+        <div class="logo-container">
+            <img src="Logo InfraFlow.png" alt="Logo InfraFlow" onerror="this.style.display='none'; document.querySelector('.logo-container h1').style.display='block';">
+            <h1>InfraFlow</h1>
+            <p>Gestão Ágil de Manutenção Predial</p>
+        </div>
+        <div class="input-group">
+            <label>Código da Instituição</label>
+            <input type="text" id="cod-inst" value="UFRPE-UABJ">
+        </div>
+        <div class="input-group">
+            <label>Matrícula / SIAPE</label>
+            <input type="text" id="matricula" placeholder="Digite sua matrícula">
+        </div>
+        <button class="btn btn-primary" onclick="login('comunidade')">Aluno / Docente</button>
+        <button class="btn btn-outline" onclick="login('tecnico')">Equipe Técnica</button>
+        <button class="btn btn-dark" onclick="login('gestao')">Gestão Administrativa</button>
+    </div>
+
+    <!-- ================= FLUXO COMUNIDADE ================= -->
+    <div id="tel002" class="screen">
+        <h3 style="margin-bottom: 15px; color: var(--text-dark);">Ambientes - UABJ</h3>
+        <div class="input-group">
+            <input type="text" id="busca-sala" placeholder="Buscar sala, bloco ou laboratório..." onkeyup="filtrarSalas()">
+        </div>
+        <div id="lista-salas-comunidade"></div>
+    </div>
+
+    <div id="tel004" class="screen">
+        <h2 id="room-name" style="color: var(--primary-blue); margin-bottom: 5px;"></h2>
+        <p id="room-bloco" style="color: var(--text-light); margin-bottom: 20px;"></p>
+
+        <div id="room-alert" class="alert-box">
+            ⚠️ <b>Atenção:</b> Já existe um chamado em andamento para este ambiente. A equipe já foi notificada!
+        </div>
+
+        <h3 style="margin-bottom: 15px; font-size: 1rem;">Equipamentos e Estrutura:</h3>
+        <div id="lista-equipamentos"></div>
+
+        <button id="btn-reportar" class="btn btn-primary" style="margin-top: 20px;" onclick="navigate('tel005', 'Abrir Chamado')">🚨 Relatar Novo Problema</button>
+    </div>
+
+    <div id="tel005" class="screen">
+        <p style="margin-bottom: 15px;">Preencha os dados do defeito no ambiente atual.</p>
+        <div class="input-group">
+            <label>Categoria</label>
+            <select id="chamado-categoria">
+                <option value="">Selecione...</option>
+                <option value="Elétrica">Elétrica / Iluminação</option>
+                <option value="Climatização">Ar-condicionado / Ventilação</option>
+                <option value="Audiovisual">Projetor / Áudio / Computadores</option>
+                <option value="Zeladoria">Zeladoria / Mobília / Hidráulica</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Descrição</label>
+            <input type="text" id="chamado-desc" placeholder="Ex: A tomada bancada 3 está sem energia">
+        </div>
+        <div class="input-group">
+            <label>Anexar Fotografia (Obrigatório)</label>
+            <div style="border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 8px; color: var(--secondary-blue); cursor: pointer;">
+                📷 Clicar para abrir câmera
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="salvarChamado()">Enviar Solicitação</button>
+    </div>
+
+    <div id="tel006" class="screen" style="text-align: center; padding-top: 50px;">
+        <h1 style="font-size: 4rem; color: var(--success); margin-bottom: 20px;">✓</h1>
+        <h2 style="color: var(--text-dark);">Chamado Registrado!</h2>
+        <p style="color: var(--text-light); margin: 15px 0;">A equipe técnica foi notificada e avaliará a solicitação em breve.</p>
+        <button class="btn btn-primary" onclick="navigate('tel007', 'Meus Chamados')">Ver Meus Chamados</button>
+    </div>
+
+    <div id="tel007" class="screen">
+        <h3 style="margin-bottom: 15px;">Acompanhamento</h3>
+        <div id="lista-meus-chamados"></div>
+    </div>
+
+    <!-- ================= FLUXO TÉCNICO ================= -->
+    <div id="tel008" class="screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color: var(--text-dark);">Ordens de Serviço</h3>
+            <span class="badge pendente" id="count-urgencia">0</span>
+        </div>
+        <div class="input-group">
+            <select id="filtro-setor" onchange="renderChamadosTecnico()">
+                <option value="Todos">Todos os Setores</option>
+                <option value="Elétrica">Elétrica</option>
+                <option value="Climatização">Climatização</option>
+                <option value="Audiovisual">Audiovisual / TI</option>
+                <option value="Zeladoria">Zeladoria / Infra</option>
+            </select>
+        </div>
+        <div id="lista-chamados-tecnico"></div>
+    </div>
+
+    <div id="tel009" class="screen">
+        <h3 id="tech-room" style="color: var(--primary-blue); margin-bottom: 5px;"></h3>
+        <p id="tech-cat" style="color: var(--text-light); margin-bottom: 20px;"></p>
+        
+        <div style="background-color: #ddd; height: 150px; border-radius: 8px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+            [ Fotografia do Problema ]
+        </div>
+
+        <p style="margin-bottom: 20px;" id="tech-desc"></p>
+
+        <div class="input-group">
+            <label>Alterar Status</label>
+            <select id="tech-status">
+                <option value="Pendente">Pendente</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Concluído">Concluído</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="atualizarStatusChamado()">Salvar Alteração</button>
+    </div>
+
+    <!-- ================= FLUXO GESTÃO ================= -->
+    <div id="tel010" class="screen">
+        <h3 style="margin-bottom: 15px; color: var(--text-dark);">Painel de Gestão Predial</h3>
+        
+        <div class="card" onclick="navigate('tel011', 'Cadastrar Ambiente')">
+            <div>
+                <div class="card-title">➕ Cadastrar Novo Ambiente</div>
+                <div class="card-subtitle">Adicionar Blocos e Salas na Instituição</div>
+            </div>
+            <span>➔</span>
+        </div>
+        <div class="card" onclick="alert('Código de Acesso UABJ: UFRPE-UABJ-2026\nCompartilhe com a comunidade acadêmica.')">
+            <div>
+                <div class="card-title">🔑 Gerar Código de Acesso</div>
+                <div class="card-subtitle">Gerenciar vínculo institucional</div>
+            </div>
+            <span>➔</span>
+        </div>
+        <div class="card" onclick="alert('Relatório Estatístico (Exemplo):\n- Ar-condicionados: 4 falhas (Bloco A e Lab. Hardware).\n- Redes/TI: 2 chamados pendentes.\n- Hidráulica: 1 chamado concluído.\nExportação para PDF indisponível no protótipo.')">
+            <div>
+                <div class="card-title">📊 Histórico e Relatórios</div>
+                <div class="card-subtitle">Estatísticas para tomada de decisão</div>
+            </div>
+            <span>➔</span>
+        </div>
+    </div>
+
+    <div id="tel011" class="screen">
+        <p style="margin-bottom: 15px;">Adicione uma nova sala à hierarquia da instituição.</p>
+        <div class="input-group">
+            <label>Nome do Bloco</label>
+            <input type="text" id="novo-bloco" placeholder="Ex: Bloco C">
+        </div>
+        <div class="input-group">
+            <label>Nome da Sala/Laboratório</label>
+            <input type="text" id="nova-sala" placeholder="Ex: Lab. de Automação">
+        </div>
+        <button class="btn btn-primary" onclick="cadastrarSala()">Salvar Ambiente</button>
+    </div>
+
+    <!-- NAVEGAÇÃO INFERIOR -->
+    <div class="bottom-nav" id="nav-comunidade">
+        <span onclick="navigate('tel002', 'Ambientes')" class="active-tab"><i>🏠</i>Início</span>
+        <span onclick="alert('Abertura de câmera para escanear QR Code da porta. (Funcionalidade simulada)')"><i>📷</i>Ler QR</span>
+        <span onclick="navigate('tel007', 'Meus Chamados')"><i>📋</i>Chamados</span>
+    </div>
+
+    <div class="bottom-nav" id="nav-tecnico">
+        <span onclick="navigate('tel008', 'Painel Técnico')" class="active-tab"><i>🔧</i>Ordens</span>
+        <span onclick="alert('Módulo de Estoque e Peças na V2.0')"><i>📦</i>Estoque</span>
+    </div>
+
+    <div class="bottom-nav" id="nav-gestor">
+        <span onclick="navigate('tel010', 'Painel Gestão')" class="active-tab"><i>⚙️</i>Admin</span>
+        <span onclick="navigate('tel002', 'Visão Geral')"><i>👁️</i>Ver Salas</span>
+    </div>
+
+</div>
+
+<script>
+    // --- ESTADO DA APLICAÇÃO (Banco de Dados Simulado) ---
+    let currentUser = { perfil: '', matricula: '' };
+    let salaAtualId = null;
+    let chamadoAtualId = null;
+
+    // BANCO DE DADOS EXPANDIDO: Mapeamento completo de salas, blocos e laboratórios
+    let dbSalas = [
+        // Bloco A - Salas de Aula Teórica
+        { id: 1, nome: "Sala de Aula 01", bloco: "Bloco A", equipamentos: ["Ar-condicionado", "Projetor", "Iluminação", "Tomadas", "Cadeiras", "Quadro Branco"] },
+        { id: 2, nome: "Sala de Aula 02", bloco: "Bloco A", equipamentos: ["Ar-condicionado", "Projetor", "Iluminação", "Tomadas", "Cadeiras", "Quadro Branco"] },
+        { id: 3, nome: "Sala de Aula 03", bloco: "Bloco A", equipamentos: ["Ar-condicionado", "Projetor", "Iluminação", "Tomadas", "Cadeiras", "Quadro Branco"] },
+        { id: 4, nome: "Sala de Aula 04", bloco: "Bloco A", equipamentos: ["Ar-condicionado", "Projetor", "Iluminação", "Tomadas", "Cadeiras", "Quadro Branco"] },
+        { id: 5, nome: "Banheiro Masculino", bloco: "Bloco A", equipamentos: ["Pias / Torneiras", "Sanitários", "Iluminação", "Portas e Fechaduras"] },
+        { id: 6, nome: "Banheiro Feminino", bloco: "Bloco A", equipamentos: ["Pias / Torneiras", "Sanitários", "Iluminação", "Portas e Fechaduras"] },
+
+        // Bloco B - Laboratórios Específicos
+        { id: 7, nome: "Laboratório de Hardware / Robótica", bloco: "Bloco B", equipamentos: ["Ar-condicionado", "Bancadas", "Computadores", "Tomadas 220V", "Projetor", "Kits de Montagem"] },
+        { id: 8, nome: "Laboratório de Redes de Computadores", bloco: "Bloco B", equipamentos: ["Ar-condicionado", "Computadores", "Racks de Servidor", "Cabeamento de Rede", "Iluminação", "Projetor"] },
+        { id: 9, nome: "Laboratório de Física / Eletromagnetismo", bloco: "Bloco B", equipamentos: ["Ar-condicionado", "Bancadas", "Tomadas", "Iluminação", "Equipamentos de Medição"] },
+        { id: 10, nome: "Laboratório de Informática", bloco: "Bloco B", equipamentos: ["Ar-condicionado", "Computadores", "Cadeiras", "Projetor", "Quadro Branco"] },
+        { id: 11, nome: "Banheiro Acessível", bloco: "Bloco B", equipamentos: ["Pias / Torneiras", "Sanitários", "Barras de Apoio", "Iluminação"] },
+
+        // Bloco Administrativo e Docentes
+        { id: 12, nome: "Coordenação de Curso (Eng. Computação)", bloco: "Administrativo", equipamentos: ["Ar-condicionado", "Computadores", "Impressora", "Mobiliário", "Iluminação"] },
+        { id: 13, nome: "Secretaria Acadêmica", bloco: "Administrativo", equipamentos: ["Ar-condicionado", "Computadores", "Guichês de Atendimento", "Iluminação", "Impressora"] },
+        { id: 14, nome: "Sala dos Professores", bloco: "Administrativo", equipamentos: ["Ar-condicionado", "Sofás", "Mesas de Reunião", "Cafeteira", "Computadores", "Iluminação"] },
+        { id: 15, nome: "Direção Geral", bloco: "Administrativo", equipamentos: ["Ar-condicionado", "Computadores", "Mobiliário", "Iluminação"] },
+
+        // Áreas Comuns e Infraestrutura Geral
+        { id: 16, nome: "Biblioteca Central", bloco: "Área Comum", equipamentos: ["Ar-condicionado Central", "Estantes de Livros", "Mesas de Estudo", "Computadores de Pesquisa", "Iluminação"] },
+        { id: 17, nome: "Auditório Principal", bloco: "Área Comum", equipamentos: ["Ar-condicionado Central", "Projetor de Alta Potência", "Sistema de Som / Microfones", "Poltronas", "Iluminação de Palco"] },
+        { id: 18, nome: "Refeitório / Cantina", bloco: "Área Comum", equipamentos: ["Mesas e Cadeiras", "Ventiladores", "Iluminação", "Bebedouros / Filtros", "Pias"] },
+        { id: 19, nome: "Área de Convivência (Jardim)", bloco: "Área Externa", equipamentos: ["Bancos", "Lixeiras", "Iluminação Externa (Postes)", "Tomadas Externas"] }
+    ];
+
+    let dbChamados = [];
+    let chamadoCounter = 1;
+
+    // --- CONTROLE DE NAVEGAÇÃO ---
+    let historyStack = ['tel001'];
+
+    function navigate(screenId, title) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        document.getElementById('header-title').innerText = title || 'InfraFlow';
+        
+        // Controle do botão Voltar e Logout
+        if(screenId === 'tel001') {
+            document.getElementById('btn-voltar').style.display = 'none';
+            document.getElementById('btn-logout').style.display = 'none';
+            document.querySelectorAll('.bottom-nav').forEach(n => n.style.display = 'none');
+            document.getElementById('matricula').value = ''; // Limpa login
+        } else if (['tel002', 'tel008', 'tel010'].includes(screenId)) {
+            document.getElementById('btn-voltar').style.display = 'none';
+            document.getElementById('btn-logout').style.display = 'block';
+            historyStack = [screenId]; // reseta base
+        } else {
+            document.getElementById('btn-voltar').style.display = 'block';
+            document.getElementById('btn-logout').style.display = 'none';
+            if(historyStack[historyStack.length - 1] !== screenId) historyStack.push(screenId);
+        }
+
+        // Renderizações Automáticas ao entrar nas telas
+        if(screenId === 'tel002') renderSalasComunidade();
+        if(screenId === 'tel007') renderMeusChamados();
+        if(screenId === 'tel008') renderChamadosTecnico();
+    }
+
+    function goBack() {
+        if(historyStack.length > 1) {
+            historyStack.pop();
+            navigate(historyStack[historyStack.length - 1]);
+        }
+    }
+
+    function logout() {
+        currentUser = { perfil: '', matricula: '' };
+        navigate('tel001', 'InfraFlow');
+    }
+
+    function login(perfil) {
+        let mat = document.getElementById('matricula').value;
+        if(!mat && perfil !== 'gestao') { alert("Insira sua matrícula (Ex: 20261234)."); return; }
+        
+        currentUser = { perfil: perfil, matricula: mat };
+        
+        document.querySelectorAll('.bottom-nav').forEach(n => n.style.display = 'none');
+
+        if(perfil === 'comunidade') {
+            document.getElementById('nav-comunidade').style.display = 'flex';
+            navigate('tel002', 'Ambientes');
+        } else if (perfil === 'tecnico') {
+            document.getElementById('nav-tecnico').style.display = 'flex';
+            navigate('tel008', 'Painel Técnico');
+        } else {
+            document.getElementById('nav-gestor').style.display = 'flex';
+            navigate('tel010', 'Gestão Institucional');
+        }
+    }
+
+    // --- FUNÇÕES DA COMUNIDADE E GESTÃO DE SALAS ---
+    function renderSalasComunidade(termoBusca = '') {
+        let container = document.getElementById('lista-salas-comunidade');
+        container.innerHTML = '';
+
+        // Filtragem
+        let salasFiltradas = dbSalas.filter(s => 
+            s.nome.toLowerCase().includes(termoBusca.toLowerCase()) || 
+            s.bloco.toLowerCase().includes(termoBusca.toLowerCase())
+        );
+
+        // Agrupamento por Bloco para melhor visualização
+        let blocos = [...new Set(salasFiltradas.map(s => s.bloco))];
+
+        if(salasFiltradas.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-light); margin-top: 20px;">Nenhum ambiente encontrado.</p>';
+            return;
+        }
+
+        blocos.forEach(bloco => {
+            container.innerHTML += `<div class="bloco-header">${bloco}</div>`;
+            let salasDoBloco = salasFiltradas.filter(s => s.bloco === bloco);
+            
+            salasDoBloco.forEach(sala => {
+                container.innerHTML += `
+                    <div class="card" onclick="abrirSala(${sala.id})">
+                        <div>
+                            <div class="card-title">${sala.nome}</div>
+                            <div class="card-subtitle">${sala.equipamentos.length} itens mapeados</div>
+                        </div>
+                        <span style="color: var(--secondary-blue); font-weight: bold;">➔</span>
+                    </div>`;
+            });
+        });
+    }
+
+    function filtrarSalas() {
+        let termo = document.getElementById('busca-sala').value;
+        renderSalasComunidade(termo);
+    }
+
+    function abrirSala(id) {
+        salaAtualId = id;
+        let sala = dbSalas.find(s => s.id === id);
+        document.getElementById('room-name').innerText = sala.nome;
+        document.getElementById('room-bloco').innerText = sala.bloco;
+
+        // Verifica chamados ativos para esta sala
+        let chamadosAtivos = dbChamados.filter(c => c.salaId === id && c.status !== 'Concluído');
+        
+        let equipContainer = document.getElementById('lista-equipamentos');
+        equipContainer.innerHTML = '';
+        
+        sala.equipamentos.forEach(eq => {
+            let temFalha = chamadosAtivos.some(c => c.desc.toLowerCase().includes(eq.toLowerCase()) || c.categoria !== 'Zeladoria');
+            // Simplificação visual para o protótipo: se há qualquer chamado na sala, marcamos o equipamento principal como alerta, 
+            // ou deixamos o usuário ver o alerta geral no topo.
+            let statusDisplay = "OK";
+            let badgeClass = "badge disponivel";
+
+            // Se o relato contiver o nome do equipamento (ex: "projetor quebrado"), ele fica vermelho
+            if(chamadosAtivos.some(c => c.desc.toLowerCase().includes(eq.toLowerCase().split('/')[0].trim()))) {
+                statusDisplay = "Em Manutenção";
+                badgeClass = "badge manutencao";
+            }
+
+            equipContainer.innerHTML += `
+                <div class="card" style="padding: 10px; margin-bottom: 8px;">
+                    <span style="font-weight: 500; color: var(--text-dark);">${eq}</span>
+                    <span class="${badgeClass}">${statusDisplay}</span>
+                </div>`;
+        });
+
+        if(chamadosAtivos.length > 0) {
+            document.getElementById('room-alert').style.display = 'block';
+            document.getElementById('btn-reportar').style.display = 'block'; // Permitir múltiplos chamados
+        } else {
+            document.getElementById('room-alert').style.display = 'none';
+            document.getElementById('btn-reportar').style.display = 'block';
+        }
+
+        navigate('tel004', 'Perfil da Sala');
+    }
+
+    function salvarChamado() {
+        let cat = document.getElementById('chamado-categoria').value;
+        let desc = document.getElementById('chamado-desc').value;
+        if(!cat || !desc) { alert("Preencha todos os campos obrigatórios (Categoria e Descrição)."); return; }
+
+        let sala = dbSalas.find(s => s.id === salaAtualId);
+
+        dbChamados.push({
+            id: chamadoCounter++,
+            salaId: sala.id,
+            salaNome: sala.nome,
+            bloco: sala.bloco,
+            categoria: cat,
+            desc: desc,
+            matricula: currentUser.matricula,
+            status: 'Pendente',
+            data: new Date().toLocaleDateString('pt-BR')
+        });
+
+        // Limpa form
+        document.getElementById('chamado-categoria').value = '';
+        document.getElementById('chamado-desc').value = '';
+
+        navigate('tel006', 'Sucesso');
+    }
+
+    function renderMeusChamados() {
+        let container = document.getElementById('lista-meus-chamados');
+        let meus = dbChamados.filter(c => c.matricula === currentUser.matricula);
+        
+        container.innerHTML = '';
+        if(meus.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-light); margin-top: 20px;">Nenhum chamado aberto por você ainda.</p>';
+            return;
+        }
+
+        // Exibe do mais recente para o mais antigo
+        meus.slice().reverse().forEach(c => {
+            let badgeClass = c.status === 'Pendente' ? 'warning' : (c.status === 'Em Andamento' ? 'andamento' : 'success');
+            container.innerHTML += `
+                <div class="card">
+                    <div style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <div class="card-title">${c.salaNome}</div>
+                            <span style="font-size: 0.75rem; color: #999;">${c.data}</span>
+                        </div>
+                        <div class="card-subtitle"><b>${c.categoria}:</b> ${c.desc}</div>
+                        <div style="margin-top: 10px;"><span class="badge ${badgeClass}" style="background-color: var(--${badgeClass});">${c.status}</span></div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // --- FUNÇÕES DA EQUIPE TÉCNICA ---
+    function renderChamadosTecnico() {
+        let filtro = document.getElementById('filtro-setor').value;
+        let container = document.getElementById('lista-chamados-tecnico');
+        
+        let pendentes = dbChamados.filter(c => c.status !== 'Concluído');
+        if(filtro !== 'Todos') pendentes = pendentes.filter(c => c.categoria === filtro);
+
+        document.getElementById('count-urgencia').innerText = pendentes.length + " Abertos";
+
+        container.innerHTML = '';
+        if(pendentes.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-light); margin-top: 20px;">Nenhum chamado pendente no setor.</p>';
+            return;
+        }
+
+        pendentes.forEach(c => {
+            let borderCor = c.status === 'Pendente' ? 'var(--warning)' : '#17a2b8';
+            container.innerHTML += `
+                <div class="card" style="border-left: 4px solid ${borderCor};" onclick="abrirDetalheTecnico(${c.id})">
+                    <div>
+                        <div class="card-title">${c.salaNome} <span style="font-size: 0.8rem; font-weight: normal; color: #666;">(${c.bloco})</span></div>
+                        <div class="card-subtitle">${c.desc}</div>
+                        <div class="card-subtitle" style="color: var(--primary-blue); font-weight: bold; margin-top: 5px;">Aberto por: ${c.matricula}</div>
+                    </div>
+                    <span style="color: ${borderCor}; font-weight: bold;">➔</span>
+                </div>`;
+        });
+    }
+
+    function abrirDetalheTecnico(id) {
+        chamadoAtualId = id;
+        let c = dbChamados.find(ch => ch.id === id);
+        
+        document.getElementById('tech-room').innerText = `${c.salaNome} - ${c.bloco}`;
+        document.getElementById('tech-cat').innerText = `Setor Responsável: ${c.categoria}`;
+        document.getElementById('tech-desc').innerHTML = `<b>Relato do Usuário:</b> ${c.desc}`;
+        document.getElementById('tech-status').value = c.status;
+
+        navigate('tel009', 'Atualizar Status');
+    }
+
+    function atualizarStatusChamado() {
+        let novoStatus = document.getElementById('tech-status').value;
+        let c = dbChamados.find(ch => ch.id === chamadoAtualId);
+        c.status = novoStatus;
+        alert("Status do chamado atualizado com sucesso!");
+        goBack();
+    }
+
+    // --- FUNÇÕES DA GESTÃO ---
+    function cadastrarSala() {
+        let bloco = document.getElementById('novo-bloco').value;
+        let sala = document.getElementById('nova-sala').value;
+
+        if(!bloco || !sala) { alert("Preencha todos os campos do ambiente."); return; }
+
+        dbSalas.push({
+            id: dbSalas.length + 1,
+            nome: sala,
+            bloco: bloco,
+            // Equipamentos padrão genéricos na criação
+            equipamentos: ["Iluminação", "Tomadas", "Portas e Fechaduras"]
+        });
+
+        alert("Ambiente cadastrado com sucesso! Ele já está visível no painel da comunidade acadêmica.");
+        document.getElementById('novo-bloco').value = '';
+        document.getElementById('nova-sala').value = '';
+        goBack();
+    }
+
+</script>
+</body>
+</html>
